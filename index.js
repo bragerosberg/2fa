@@ -39,11 +39,7 @@ app.post('/api/verify', (req, res) => {
 
     const { base32:secret } = user.tempSecret;
 
-    const verified = speakeasy.totp.verify({
-      secret,
-      encoding: 'base32',
-      token
-      });
+    const verified = speakeasy.totp.verify({ secret, encoding: 'base32', token });
 
     if(verified) {
       db.push(path, { id: userId, secret: user.tempSecret });
@@ -55,10 +51,32 @@ app.post('/api/verify', (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Error retrieving user'});
   }
-})
+});
+
+// Validate token
+app.post('/api/validate', (req, res) => {
+  const { token, userId } = req.body;
+
+  try {
+    const path = `/user/${userId}`;
+    const user = db.getData(path);
+
+    const { base32:secret } = user.secret;
+
+    const tokenValidates = speakeasy.totp.verify({ secret, encoding: 'base32', token, window: 1 });
+
+    if(tokenValidates) {
+      res.json({ validated: true });
+    } else {
+      res.json({ validated: false });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error retrieving user'});
+  }
+});
 
 
-
+// Server
 const PORT = process.env.PORT || 5000; 
-
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`))
