@@ -1,6 +1,7 @@
 const express = require('express');
 const speakeasy = require('speakeasy');
 const uuid = require('uuid');
+const QRCode = require('qrcode');
 
 const { JsonDB } = require('node-json-db');
 const { Config } = require('node-json-db/dist/lib/JsonDBConfig');
@@ -12,6 +13,16 @@ const db = new JsonDB(new Config('2faDB', true, false, '/'));
 
 // Test route
 app.get('/api', (req, res) => res.json({message: "2fa authentication"}));
+
+app.get('/api/login', (req, res) => {
+  QRCode.toDataURL(user.tempSecret.otpauth_url, (err, data_url) => {
+    console.log(data_url);
+  
+    // Display this data URL to the user in an <img> tag
+    // Example:
+    write('<img src="' + data_url + '">');
+  });
+});
 
 // Register user & create temp secret
 app.post('/api/register', (req, res) => {
@@ -25,7 +36,6 @@ app.post('/api/register', (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Error creating document in database" });
-    
   }
 });
 
@@ -36,9 +46,8 @@ app.post('/api/verify', (req, res) => {
   try {
     const path = `/user/${userId}`;
     const user = db.getData(path);
-
     const { base32:secret } = user.tempSecret;
-
+    
     const verified = speakeasy.totp.verify({ secret, encoding: 'base32', token });
 
     if(verified) {
@@ -60,7 +69,6 @@ app.post('/api/validate', (req, res) => {
   try {
     const path = `/user/${userId}`;
     const user = db.getData(path);
-
     const { base32:secret } = user.secret;
 
     const tokenValidates = speakeasy.totp.verify({ secret, encoding: 'base32', token, window: 1 });

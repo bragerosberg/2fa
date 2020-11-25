@@ -8,6 +8,7 @@
     "init": "^0.1.2",
     "node-json-db": "^1.1.0",
     "nodemon": "^2.0.6",
+    "qrcode": "^1.4.4",
     "speakeasy": "^2.0.0",
     "uuid": "^8.3.1"
   },
